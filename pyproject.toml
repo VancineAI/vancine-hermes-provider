@@ -1,0 +1,27 @@
+[project]
+name = "vancine-hermes-provider"
+version = "0.1.0"
+description = "Vancine model provider plugin for Hermes Agent, Gateway, and Desktop"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+authors = [{ name = "Vancine" }]
+keywords = ["hermes", "vancine", "model-provider"]
+dependencies = []
+
+[project.urls]
+Homepage = "https://vancine.com"
+Documentation = "https://vancine.com/docs"
+Models = "https://vancine.com/docs/models"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py311"
+src = ["."]
+exclude = ["tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
