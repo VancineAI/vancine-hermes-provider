@@ -58,18 +58,19 @@ ln -sfn /absolute/path/to/vancine-hermes-provider \
 
 Restart the Hermes CLI / Gateway / Desktop backend after linking. `vancine` should appear as an API-key provider.
 
-## GitHub install (after the repository is public)
+## GitHub install
 
-Once this repository exists as a **public GitHub repo**, Hermes can install it as a custom source:
+Public source: https://github.com/fx247562340/vancine-hermes-provider
 
 ```bash
-# Not available yet — this repository has not been published.
-hermes plugins install <owner>/vancine-hermes-provider
+hermes plugins install fx247562340/vancine-hermes-provider
 ```
 
-Being listed in the official Hermes plugin catalog is a separate discovery path, not a prerequisite for `owner/repo` install. This plugin is not published and is not in that catalog today.
+Hermes treats this as a **custom (unreviewed) source**, not an official catalog entry. After clone it asks `Enable 'vancine-provider' now? [y/N]`. Answer `y` to activate.
 
-Until a public GitHub repo exists, use the isolated development test or the real Hermes home install above.
+This plugin is **not** in the official Hermes plugin catalog. Being listed there is a separate discovery path and has not been requested.
+
+`hermes plugins validate` currently exits 1 with `capability probe: no register()`. That gate looks for a generic PluginManager `register(ctx)` entry. Runtime discovery for `kind: model-provider` uses import-time `register_provider` instead, and PluginManager skips this kind so it does not double-instantiate. Hermes's own bundled model providers fail the same check. This plugin does not add a no-op `register()` to paper over that admission-gate mismatch.
 
 A pip extra / PyPI package is not provided in this tree.
 
