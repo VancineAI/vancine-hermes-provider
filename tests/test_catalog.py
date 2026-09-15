@@ -20,7 +20,12 @@ from catalog import (  # noqa: E402
     reset_catalog_state,
     resolve_model_ids,
 )
-from constants import CATALOG_URL, FALLBACK_MODEL_IDS, VANCINE_ORIGIN  # noqa: E402
+from constants import (  # noqa: E402
+    CATALOG_URL,
+    FALLBACK_MODEL_IDS,
+    RETIRED_MODEL_IDS,
+    VANCINE_ORIGIN,
+)
 
 
 def chat_model(model_id: str, **overrides):
@@ -87,6 +92,36 @@ class ParseTests(unittest.TestCase):
         payload = envelope([chat_model("same"), chat_model("same"), chat_model("other")])
         self.assertEqual(parse_chat_model_ids(payload), ["same", "other"])
 
+    def test_parse_filters_retired_ids_and_keeps_the_replacement(self):
+        payload = envelope(
+            [chat_model("deepseek-flash"), chat_model("deepseek-v4.1-flash")]
+        )
+        self.assertEqual(parse_chat_model_ids(payload), ["deepseek-v4.1-flash"])
+
+    def test_parse_retired_only_is_a_successful_empty_catalog(self):
+        self.assertEqual(parse_chat_model_ids(envelope([chat_model("deepseek-flash")])), [])
+
+    def test_retired_filter_is_exact_not_prefix_or_regex(self):
+        payload = envelope(
+            [
+                chat_model("deepseek-flash-preview"),
+                chat_model("deepseek-flash-v2"),
+                chat_model("my-deepseek-flash"),
+                chat_model("deepseek-flashx"),
+                chat_model("deepseek-v4.1-flash"),
+            ]
+        )
+        self.assertEqual(
+            parse_chat_model_ids(payload),
+            [
+                "deepseek-flash-preview",
+                "deepseek-flash-v2",
+                "my-deepseek-flash",
+                "deepseek-flashx",
+                "deepseek-v4.1-flash",
+            ],
+        )
+
     def test_rejects_openai_models_shape(self):
         with self.assertRaises(CatalogError) as ctx:
             parse_chat_model_ids({"object": "list", "data": [{"id": "glm-5.3-flash"}]})
@@ -99,6 +134,20 @@ class ParseTests(unittest.TestCase):
             parse_chat_model_ids({**envelope([]), "schemaVersion": 2})
         with self.assertRaises(CatalogError):
             parse_chat_model_ids(["not", "an", "object"])
+
+
+class FallbackMigrationTests(unittest.TestCase):
+    """The retired deepseek-flash migration invariants."""
+
+    def test_first_run_fallback_contains_the_current_replacement(self):
+        self.assertIn("deepseek-v4.1-flash", FALLBACK_MODEL_IDS)
+
+    def test_first_run_fallback_contains_no_retired_id(self):
+        for retired_id in RETIRED_MODEL_IDS:
+            self.assertNotIn(retired_id, FALLBACK_MODEL_IDS)
+
+    def test_retired_set_contains_the_exact_delisted_id(self):
+        self.assertIn("deepseek-flash", RETIRED_MODEL_IDS)
 
 
 class FetchAndFallbackTests(unittest.TestCase):
@@ -174,6 +223,26 @@ class FetchAndFallbackTests(unittest.TestCase):
         later = resolve_model_ids(transport=self._transport(500, b"down"))
         self.assertEqual(later, [])
         self.assertNotEqual(later, list(FALLBACK_MODEL_IDS))
+
+    def test_retired_only_success_then_failure_keeps_empty_list(self):
+        """A live catalog that only still publishes a retired id is a
+        successful empty catalog; a later failure must not revive fallback."""
+        self.assertEqual(
+            resolve_model_ids(
+                transport=self._transport(200, envelope([chat_model("deepseek-flash")]))
+            ),
+            [],
+        )
+        later = resolve_model_ids(transport=self._transport(503, b"down"))
+        self.assertEqual(later, [])
+        self.assertNotEqual(later, list(FALLBACK_MODEL_IDS))
+        self.assertNotIn("deepseek-flash", later)
+
+    def test_first_failure_fallback_has_current_ids_only(self):
+        ids = resolve_model_ids(transport=self._transport(0, b"", error=socket.timeout("x")))
+        self.assertIn("deepseek-v4.1-flash", ids)
+        self.assertNotIn("deepseek-flash", ids)
+        self.assertEqual(ids, list(FALLBACK_MODEL_IDS))
 
     def test_fetch_live_raises_on_non_2xx(self):
         with self.assertRaises(CatalogError) as ctx:

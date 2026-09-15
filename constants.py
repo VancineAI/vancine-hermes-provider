@@ -23,7 +23,7 @@ MODELS_DOCS_URL = "https://vancine.com/docs/models"
 
 CATALOG_SCHEMA_VERSION = 1
 CATALOG_TIMEOUT_S = 8.0
-USER_AGENT = "vancine-hermes-provider/0.1.0"
+USER_AGENT = "vancine-hermes-provider/0.1.1"
 
 # Low-cost Chat Completions aux model from the live Pi catalog
 # GET https://vancine.com/api/pi/catalog at 2026-09-12T04:26:14Z
@@ -34,14 +34,28 @@ USER_AGENT = "vancine-hermes-provider/0.1.0"
 DEFAULT_AUX_MODEL = "glm-5.3-flash"
 
 # First-run offline snapshot only. Same live GET as DEFAULT_AUX_MODEL.
-# All four were Chat Completions models suitable for agent tool use.
+# All four are Chat Completions models suitable for agent tool use.
 # This is not a live catalog. A successful live fetch replaces it entirely
 # and must not resurrect a snapshot id the server no longer publishes.
+# "deepseek-v4.1-flash" is a distinct current catalog entry that replaces
+# the retired "deepseek-flash" (see RETIRED_MODEL_IDS); the migration was a
+# catalog-item swap, not a rename of one id into the other.
 FALLBACK_MODEL_IDS = (
     "hy4-preview",
-    "deepseek-flash",
+    "deepseek-v4.1-flash",
     "glm-5.3-flash",
     "qwen3.8-flash",
+)
+
+# Delisted Vancine Chat Completions model ids. Exact string matches only —
+# never a prefix or regex — so other DeepSeek ids ("deepseek-v4.1-flash",
+# "deepseek-flash-v2", ...) are unaffected. A server payload that still
+# publishes a retired id is filtered by parse_chat_model_ids so the id
+# cannot resurface in a live or cached list.
+RETIRED_MODEL_IDS = frozenset(
+    {
+        "deepseek-flash",
+    }
 )
 
 CHAT_KIND = "chat"

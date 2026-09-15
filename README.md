@@ -115,7 +115,7 @@ hermes model
 hermes chat --provider vancine -m glm-5.3-flash
 ```
 
-Use `vancine:<model-id>` anywhere Hermes accepts `provider:model`. Model ids are Vancine Chat Completions ids from the live catalog (for example `glm-5.3-flash`, `qwen3.8-flash`, `deepseek-flash`). Image, video, audio, embedding, and other non-chat models are not listed.
+Use `vancine:<model-id>` anywhere Hermes accepts `provider:model`. Model ids are Vancine Chat Completions ids from the live catalog (for example `glm-5.3-flash`, `qwen3.8-flash`, `deepseek-v4.1-flash`). Image, video, audio, embedding, and other non-chat models are not listed. Retired ids such as `deepseek-flash` are filtered out of every live list even if the server still publishes them.
 
 The cheap auxiliary default is `glm-5.3-flash` (summaries, compression). You can still pick any catalog model as the main chat model.
 
@@ -133,10 +133,11 @@ Two layers, which must not be conflated:
 2. A later fetch failure returns that last live list. It does **not** re-inject the first-run snapshot.
 3. First-run failure only (never a successful live fetch) returns this **snapshot**, which is not a live catalog:
    - `hy4-preview`
-   - `deepseek-flash`
+   - `deepseek-v4.1-flash`
    - `glm-5.3-flash`
    - `qwen3.8-flash`
 4. After a live fetch succeeds, a snapshot id that Vancine no longer publishes is **not** revived by this plugin's fallback.
+5. Delisted ids are filtered from live payloads by exact match (`deepseek-flash`). `deepseek-v4.1-flash` is a different catalog entry that replaced it, not a rename of the same id, so the two are distinct catalog entries. The raw server payload may still return both ids during the migration; because the plugin filters the retired id exactly, the list this plugin hands to Hermes never exposes both at once. A live catalog that still returns only the retired id resolves to a successful empty list.
 
 **Hermes core disk cache** (`provider_models_cache.json` under `HERMES_HOME`)
 

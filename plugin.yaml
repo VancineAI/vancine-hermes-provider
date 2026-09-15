@@ -1,6 +1,6 @@
 name: vancine-provider
 kind: model-provider
-version: 0.1.0
+version: 0.1.1
 description: Vancine — OpenAI-compatible Chat Completions API
 author: Vancine
 homepage: https://vancine.com

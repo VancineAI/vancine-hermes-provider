@@ -1,6 +1,6 @@
 [project]
 name = "vancine-hermes-provider"
-version = "0.1.0"
+version = "0.1.1"
 description = "Vancine model provider plugin for Hermes Agent, Gateway, and Desktop"
 readme = "README.md"
 license = { file = "LICENSE" }

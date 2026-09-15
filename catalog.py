@@ -27,6 +27,7 @@ try:
         EXCLUDED_KINDS,
         FALLBACK_MODEL_IDS,
         PROVIDER_ID,
+        RETIRED_MODEL_IDS,
         USER_AGENT,
         VANCINE_ORIGIN,
     )
@@ -42,6 +43,7 @@ except ImportError:
         EXCLUDED_KINDS,
         FALLBACK_MODEL_IDS,
         PROVIDER_ID,
+        RETIRED_MODEL_IDS,
         USER_AGENT,
         VANCINE_ORIGIN,
     )
@@ -160,9 +162,9 @@ def _is_record(value: Any) -> bool:
 def parse_chat_model_ids(payload: Any) -> list[str]:
     """Return Chat Completions model ids from a Vancine Pi catalog payload.
 
-    Raises CatalogError on an invalid envelope. Individual unsound or
-    non-chat entries are skipped. A valid envelope with zero compatible
-    models is a successful empty list, not a fallback trigger.
+    Raises CatalogError on an invalid envelope. Individual unsound,
+    non-chat, or retired entries are skipped. A valid envelope with zero
+    compatible models is a successful empty list, not a fallback trigger.
     """
     if not _is_record(payload):
         raise CatalogError("invalid_catalog", "Catalog payload must be a JSON object")
@@ -203,6 +205,9 @@ def _compatible_chat_id(entry: Any, index: int) -> Optional[str]:
         logger.debug("catalog models[%s] skipped: missing id", index)
         return None
     model_id = model_id.strip()
+    if model_id in RETIRED_MODEL_IDS:
+        logger.debug("catalog %s skipped: retired model id", model_id)
+        return None
     kind = entry.get("kind")
     api = entry.get("api")
     endpoint = entry.get("endpoint")
