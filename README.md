@@ -60,10 +60,10 @@ Restart the Hermes CLI / Gateway / Desktop backend after linking. `vancine` shou
 
 ## GitHub install
 
-Public source: https://github.com/fx247562340/vancine-hermes-provider
+Public source: https://github.com/VancineAI/vancine-hermes-provider
 
 ```bash
-hermes plugins install fx247562340/vancine-hermes-provider
+hermes plugins install VancineAI/vancine-hermes-provider
 ```
 
 Hermes treats this as a **custom (unreviewed) source**, not an official catalog entry. After clone it asks `Enable 'vancine-provider' now? [y/N]`. Answer `y` to activate.
